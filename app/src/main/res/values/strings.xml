@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Titan2 Toolkit</string>
+    <string name="app_description">泰坦2 国际版内置应用增强：桌面 6 列布局等。需要 Vector / LSPosed。</string>
+    <string name="main_status">模块已安装。请在 Vector / LSPosed 中启用，并把作用域勾选为桌面。</string>
+    <string name="main_scope">目标包名：%1$s</string>
+    <string name="main_columns">桌面列数：%1$d</string>
+</resources>
