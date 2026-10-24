@@ -8,33 +8,53 @@ import android.util.Log;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
+import io.github.libxposed.api.XposedInterface.Chain;
 import io.github.libxposed.api.XposedModule;
 import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam;
 
 /**
  * Entry point of the module.
  *
- * <p>Feature 1: force the stock launcher workspace to a 6-column grid.
+ * <p>Feature 1: force the stock launcher workspace, Hotseat and All Apps to a 6-column grid.
+ * <p>Feature 2: make OEM letter-key shortcuts work from any foreground app.
  */
 public final class ModuleMain extends XposedModule {
 
     static final String TAG = "Titan2Toolkit";
     static final int COLUMNS = 6;
 
+    /** All InvariantDeviceProfile fields DeviceProfile copies the column counts from. */
+    private static final String[] GRID_FIELDS = {
+            "numColumns",
+            "numShownHotseatIcons",
+            "numDatabaseHotseatIcons",
+            "numAllAppsColumns",
+            "numDatabaseAllAppsColumns",
+    };
+
     private String mHookedPackage = null;
 
     @Override
     public void onPackageReady(PackageReadyParam param) {
         String pkg = param.getPackageName();
-        if (!Targets.LAUNCHERS.contains(pkg)) {
+        boolean launcher = Targets.LAUNCHERS.contains(pkg);
+        boolean system = Targets.SYSTEM.equals(pkg);
+        if (!launcher && !system) {
             return;
         }
         if (pkg.equals(mHookedPackage)) {
             return;
         }
         try {
-            installLauncherGrid(param.getClassLoader(), pkg);
+            if (launcher) {
+                installLauncherGrid(param.getClassLoader(), pkg);
+            } else {
+                RemoteConfig.warmUp(SystemServer.context());
+                ShortcutHooks.install(this, param.getClassLoader());
+            }
             mHookedPackage = pkg;
         } catch (Throwable t) {
             log(Log.ERROR, TAG, "failed to install hooks for " + pkg, t);
@@ -49,12 +69,22 @@ public final class ModuleMain extends XposedModule {
             return;
         }
 
-        Field numColumns = findField(idp, "numColumns");
-        if (numColumns == null) {
-            log(Log.WARN, TAG, "InvariantDeviceProfile.numColumns not found");
+        LayoutGuard.install(this, cl, idp);
+
+        List<Field> gridFields = new ArrayList<>();
+        for (String name : GRID_FIELDS) {
+            Field field = findField(idp, name);
+            if (field == null) {
+                log(Log.WARN, TAG, "InvariantDeviceProfile." + name + " not found");
+                continue;
+            }
+            field.setAccessible(true);
+            gridFields.add(field);
+        }
+        if (gridFields.isEmpty()) {
+            log(Log.WARN, TAG, "no grid fields in " + pkg + ", grid hook skipped");
             return;
         }
-        numColumns.setAccessible(true);
 
         boolean installed = false;
 
@@ -74,7 +104,8 @@ public final class ModuleMain extends XposedModule {
         if (partnerOverrides != null) {
             hook(partnerOverrides).intercept(chain -> {
                 Object result = chain.proceed();
-                forceColumns(numColumns, chain.getThisObject());
+                LayoutGuard.beforeGridOverride(chain.getThisObject(), firstArg(chain), pkg);
+                forceColumnsIfEnabled(gridFields, chain.getThisObject(), firstArg(chain));
                 return result;
             });
             installed = true;
@@ -83,7 +114,8 @@ public final class ModuleMain extends XposedModule {
 
         if (newDpBuilder != null) {
             hook(newDpBuilder).intercept(chain -> {
-                forceColumns(numColumns, chain.getThisObject());
+                LayoutGuard.beforeGridOverride(chain.getThisObject(), firstArg(chain), pkg);
+                forceColumnsIfEnabled(gridFields, chain.getThisObject(), firstArg(chain));
                 return chain.proceed();
             });
             installed = true;
@@ -96,7 +128,8 @@ public final class ModuleMain extends XposedModule {
             for (Constructor<?> ctor : idp.getDeclaredConstructors()) {
                 hook(ctor).intercept(chain -> {
                     Object result = chain.proceed();
-                    forceColumns(numColumns, chain.getThisObject());
+                    LayoutGuard.beforeGridOverride(chain.getThisObject(), firstArg(chain), pkg);
+                    forceColumnsIfEnabled(gridFields, chain.getThisObject(), firstArg(chain));
                     return result;
                 });
             }
@@ -106,19 +139,27 @@ public final class ModuleMain extends XposedModule {
         log(Log.INFO, TAG, "launcher grid hook installed for " + pkg + " (columns=" + COLUMNS + ")");
     }
 
-    private void forceColumns(Field field, Object profile) {
-        if (profile == null) {
+    private void forceColumnsIfEnabled(List<Field> fields, Object profile, Object contextArg) {
+        Context context = contextArg instanceof Context ? (Context) contextArg : null;
+        if (!RemoteConfig.workspace6Columns(context) || profile == null) {
             return;
         }
-        try {
-            int old = field.getInt(profile);
-            if (old != COLUMNS) {
-                field.setInt(profile, COLUMNS);
-                log(Log.INFO, TAG, "workspace columns " + old + " -> " + COLUMNS);
+        for (Field field : fields) {
+            try {
+                int old = field.getInt(profile);
+                if (old != COLUMNS) {
+                    field.setInt(profile, COLUMNS);
+                    log(Log.INFO, TAG, field.getName() + " " + old + " -> " + COLUMNS);
+                }
+            } catch (Throwable t) {
+                log(Log.ERROR, TAG, "failed to set " + field.getName(), t);
             }
-        } catch (Throwable t) {
-            log(Log.ERROR, TAG, "failed to set columns", t);
         }
+    }
+
+    private static Object firstArg(Chain chain) {
+        List<Object> args = chain.getArgs();
+        return args.isEmpty() ? null : args.get(0);
     }
 
     private static Class<?> findClass(ClassLoader cl, String... names) {

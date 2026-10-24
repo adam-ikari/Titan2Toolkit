@@ -1,5 +1,6 @@
 package com.titan2.toolkit;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -14,6 +15,12 @@ public final class Targets {
     public static final String LAUNCHER = "com.android.launcher3";
 
     public static final List<String> LAUNCHERS = Collections.singletonList(LAUNCHER);
+
+    /** system_server, where the OEM AGUI keyboard shortcut logic runs. */
+    public static final String SYSTEM = "android";
+
+    public static final List<String> ALL =
+            Collections.unmodifiableList(Arrays.asList(LAUNCHER, SYSTEM));
 
     private Targets() {
     }
