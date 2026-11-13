@@ -1,9 +1,10 @@
 # Brain Index
 
-_Auto-generated. Last updated 2026-11-13T09:47:41.295Z._
+_Auto-generated. Last updated 2026-11-13T15:22:44.556Z._
 
 - [agent-reporting](pages/agent-reporting.md) — category: reference | tags: [agent, ops] | ## 规则（2026-11-13 起）
 - [cross-process-feature-switches](pages/cross-process-feature-switches.md) — category: decision | tags: [config, provider, xposed] | ## 结论
+- [decision-tiers](pages/decision-tiers.md) — category: reference | tags: [agent, ops, governance] | ## 规则（来自 chat/AGENTS.md「决策权限分级」，2026-11-13 生效）
 - [experimental-app-clone](pages/experimental-app-clone.md) — category: decision | tags: [xposed, settings, clone, agui] | ## 结论（已用 TEE 固件 2026042212 / Android 16 验证）
 - [global-letter-shortcuts](pages/global-letter-shortcuts.md) — category: decision | tags: [xposed, system_server, shortcut, agui] | ## 结论
 - [launcher-grid-hook](pages/launcher-grid-hook.md) — category: decision | tags: [launcher3, xposed, grid] | ## 结论
