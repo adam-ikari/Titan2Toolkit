@@ -58,9 +58,12 @@ final class ShortcutHooks {
             if (!RemoteConfig.globalLetterShortcuts()) {
                 return result;
             }
-            // Leave Ctrl/Alt/Meta/Sym combos (Ctrl+C, Alt+Tab-style editing) to the app.
+            // Leave Ctrl/Alt/Meta combos (Ctrl+C, Alt+Tab-style editing) to the app.
+            // Sym is not blocked: the OEM gate never reads the meta state, and on this
+            // keyboard Sym+letter still produces the plain letter, so the IME check is
+            // enough to keep it from interfering with typing.
             int blockedModifiers = KeyEvent.META_CTRL_ON | KeyEvent.META_ALT_ON
-                    | KeyEvent.META_META_ON | KeyEvent.META_SYM_ON;
+                    | KeyEvent.META_META_ON;
             if ((event.getMetaState() & blockedModifiers) != 0) {
                 return result;
             }

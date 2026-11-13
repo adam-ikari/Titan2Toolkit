@@ -19,8 +19,11 @@ public final class Targets {
     /** system_server, where the OEM AGUI keyboard shortcut logic runs. */
     public static final String SYSTEM = "android";
 
+    /** Stock AOSP Settings, which hosts the "Cloned apps" page. */
+    public static final String SETTINGS = "com.android.settings";
+
     public static final List<String> ALL =
-            Collections.unmodifiableList(Arrays.asList(LAUNCHER, SYSTEM));
+            Collections.unmodifiableList(Arrays.asList(LAUNCHER, SYSTEM, SETTINGS));
 
     private Targets() {
     }

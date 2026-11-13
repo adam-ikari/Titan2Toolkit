@@ -32,7 +32,7 @@ public final class RemoteConfig {
     private static boolean sWorkspace6Columns = FeatureFlags.DEFAULT_WORKSPACE_6_COLUMNS;
     private static volatile boolean sGlobalLetterShortcuts =
             FeatureFlags.DEFAULT_GLOBAL_LETTER_SHORTCUTS;
-    private static boolean sLayoutGuard = FeatureFlags.DEFAULT_LAYOUT_GUARD;
+    private static volatile boolean sExperimentalClone = FeatureFlags.DEFAULT_EXPERIMENTAL_CLONE;
     private static volatile boolean sSystemLoaded;
 
     public static synchronized boolean workspace6Columns(Context context) {
@@ -45,16 +45,6 @@ public final class RemoteConfig {
         return sWorkspace6Columns;
     }
 
-    public static synchronized boolean layoutGuard(Context context) {
-        long now = SystemClock.elapsedRealtime();
-        if (context == null || now - sLastRead < TTL_MS) {
-            return sLayoutGuard;
-        }
-        sLastRead = now;
-        read(context);
-        return sLayoutGuard;
-    }
-
     /** Cached value; stays off until the provider has been read successfully. */
     public static boolean globalLetterShortcuts() {
         long now = SystemClock.elapsedRealtime();
@@ -63,6 +53,16 @@ public final class RemoteConfig {
             warmUp(SystemServer.context());
         }
         return sSystemLoaded && sGlobalLetterShortcuts;
+    }
+
+    /** Experimental clone allowlist switch; stays off until the provider has been read. */
+    public static boolean experimentalAppClone() {
+        long now = SystemClock.elapsedRealtime();
+        if (now - sLastSystemRefresh >= SYSTEM_TTL_MS) {
+            sLastSystemRefresh = now;
+            warmUp(SystemServer.context());
+        }
+        return sSystemLoaded && sExperimentalClone;
     }
 
     public static void warmUp(Context context) {
@@ -91,8 +91,8 @@ public final class RemoteConfig {
                     FeatureFlags.KEY_WORKSPACE_6_COLUMNS, sWorkspace6Columns);
             sGlobalLetterShortcuts = result.getBoolean(
                     FeatureFlags.KEY_GLOBAL_LETTER_SHORTCUTS, sGlobalLetterShortcuts);
-            sLayoutGuard = result.getBoolean(
-                    FeatureFlags.KEY_LAYOUT_GUARD, sLayoutGuard);
+            sExperimentalClone = result.getBoolean(
+                    FeatureFlags.KEY_EXPERIMENTAL_CLONE, sExperimentalClone);
             sSystemLoaded = true;
         } catch (Throwable t) {
             // Provider not reachable from this process; keep the last known values.

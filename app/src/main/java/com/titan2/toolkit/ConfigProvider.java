@@ -39,9 +39,9 @@ public final class ConfigProvider extends ContentProvider {
         result.putBoolean(FeatureFlags.KEY_GLOBAL_LETTER_SHORTCUTS,
                 prefs.getBoolean(FeatureFlags.KEY_GLOBAL_LETTER_SHORTCUTS,
                         FeatureFlags.DEFAULT_GLOBAL_LETTER_SHORTCUTS));
-        result.putBoolean(FeatureFlags.KEY_LAYOUT_GUARD,
-                prefs.getBoolean(FeatureFlags.KEY_LAYOUT_GUARD,
-                        FeatureFlags.DEFAULT_LAYOUT_GUARD));
+        result.putBoolean(FeatureFlags.KEY_EXPERIMENTAL_CLONE,
+                prefs.getBoolean(FeatureFlags.KEY_EXPERIMENTAL_CLONE,
+                        FeatureFlags.DEFAULT_EXPERIMENTAL_CLONE));
         return result;
     }
 

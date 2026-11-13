@@ -76,7 +76,7 @@ final class LayoutGuard {
         if (!isMainProcess(pkg)) {
             return;
         }
-        if (!RemoteConfig.layoutGuard(context) || !RemoteConfig.workspace6Columns(context)) {
+        if (!RemoteConfig.workspace6Columns(context)) {
             return;
         }
         if (!sRestoreDone.compareAndSet(false, true)) {
@@ -186,7 +186,7 @@ final class LayoutGuard {
                 sContext = context;
             }
         }
-        if (context == null || !RemoteConfig.layoutGuard(context)) {
+        if (context == null || !RemoteConfig.workspace6Columns(context)) {
             return;
         }
         String dbFile = null;
@@ -580,7 +580,7 @@ final class LayoutGuard {
                 context = (Context) value;
             }
         }
-        if (context == null || !RemoteConfig.layoutGuard(context)) {
+        if (context == null || !RemoteConfig.workspace6Columns(context)) {
             return false;
         }
         Object idp = idpField.get(cursorObject);

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Titan2 Toolkit</string>
-    <string name="app_description">泰坦2 国际版内置应用增强：桌面 6 列布局（工作区 / Dock / 应用抽屉）、字母键全局快捷启动、桌面布局保护。需要 Vector / LSPosed。</string>
-    <string name="main_status">模块已安装。请在 Vector / LSPosed 中启用，作用域勾选“系统框架”和“桌面”。</string>
+    <string name="app_description">泰坦2 国际版内置应用增强：桌面 6 列布局（工作区 / Dock / 应用抽屉）、字母键全局快捷启动、桌面布局保护、实验性应用克隆白名单。需要 Vector / LSPosed。</string>
+    <string name="main_status">模块已安装。请在 Vector / LSPosed 中启用，作用域勾选“系统框架”“桌面”和“设置”。</string>
     <string name="main_scope">目标包名：%1$s</string>
     <string name="main_columns">桌面网格列数：%1$d</string>
     <string name="features_title">功能开关</string>
     <string name="feature_workspace_6_columns">桌面 6 列布局</string>
-    <string name="feature_workspace_6_columns_hint">工作区、Dock 和应用抽屉都改为 6 列；关闭后恢复系统默认；修改后需重启桌面。</string>
+    <string name="feature_workspace_6_columns_hint">工作区、Dock 和应用抽屉都改为 6 列，并自动启用桌面布局保护；关闭后恢复系统默认，布局保护也一并关闭；修改后需重启桌面。</string>
     <string name="feature_global_letter_shortcuts">字母键快捷启动全局生效</string>
     <string name="feature_global_letter_shortcuts_hint">除输入法弹出时，任意应用内按已设置的字母键都会启动对应应用；关闭后恢复系统默认（仅桌面或按住 Magic Key 时生效）。</string>
-    <string name="feature_layout_guard">桌面布局保护</string>
-    <string name="feature_layout_guard_hint">模块激活时自动备份桌面布局。模块停用或临时回到 5 列时不再删除第 6 列里的图标；重新启用 6 列后自动补回，冲突的图标放到新的一页。</string>
+    <string name="feature_experimental_clone">实验性：支持更多应用克隆</string>
+    <string name="feature_experimental_clone_hint">在“设置 → 应用 → 克隆应用”中放开原厂白名单，已安装的任意第三方应用都可创建克隆；实验性功能，个别应用克隆后可能异常，关闭后恢复原厂列表。</string>
 </resources>

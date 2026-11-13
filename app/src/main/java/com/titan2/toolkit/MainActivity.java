@@ -56,10 +56,10 @@ public final class MainActivity extends Activity {
                 R.string.feature_global_letter_shortcuts,
                 R.string.feature_global_letter_shortcuts_hint);
 
-        addSwitch(root, FeatureFlags.KEY_LAYOUT_GUARD,
-                FeatureFlags.DEFAULT_LAYOUT_GUARD,
-                R.string.feature_layout_guard,
-                R.string.feature_layout_guard_hint);
+        addSwitch(root, FeatureFlags.KEY_EXPERIMENTAL_CLONE,
+                FeatureFlags.DEFAULT_EXPERIMENTAL_CLONE,
+                R.string.feature_experimental_clone,
+                R.string.feature_experimental_clone_hint);
 
         addInfo(root, getString(R.string.main_columns, ModuleMain.COLUMNS));
         addInfo(root, getString(R.string.main_scope,

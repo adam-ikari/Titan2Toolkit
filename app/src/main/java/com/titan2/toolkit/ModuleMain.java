@@ -42,7 +42,8 @@ public final class ModuleMain extends XposedModule {
         String pkg = param.getPackageName();
         boolean launcher = Targets.LAUNCHERS.contains(pkg);
         boolean system = Targets.SYSTEM.equals(pkg);
-        if (!launcher && !system) {
+        boolean settings = Targets.SETTINGS.equals(pkg);
+        if (!launcher && !system && !settings) {
             return;
         }
         if (pkg.equals(mHookedPackage)) {
@@ -51,9 +52,12 @@ public final class ModuleMain extends XposedModule {
         try {
             if (launcher) {
                 installLauncherGrid(param.getClassLoader(), pkg);
-            } else {
+            } else if (system) {
                 RemoteConfig.warmUp(SystemServer.context());
                 ShortcutHooks.install(this, param.getClassLoader());
+            } else {
+                RemoteConfig.warmUp(SystemServer.context());
+                CloneHooks.install(this, pkg);
             }
             mHookedPackage = pkg;
         } catch (Throwable t) {
