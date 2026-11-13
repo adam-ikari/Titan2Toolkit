@@ -1,5 +1,6 @@
 package com.titan2.toolkit;
 
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -34,6 +35,15 @@ final class LayoutGuard {
     private static final long SNAPSHOT_DELAY_MS = 1500;
     private static final int CONTAINER_DESKTOP = -100;
     private static final int CONTAINER_HOTSEAT = -101;
+
+    private static final int ITEM_TYPE_APPWIDGET = 4;
+    // LauncherAppWidgetInfo restore flags. A restored widget row must not keep the appWidgetId
+    // from the snapshot: that host binding died with the row, and inflating the stale id shows
+    // "Problem loading widget". Launcher3 only allocates and binds a fresh id for rows carrying
+    // these flags (WidgetInflater.inflateAppWidget); otherwise it falls back to a pending view.
+    private static final int WIDGET_FLAG_ID_NOT_VALID = 1;
+    private static final int WIDGET_FLAG_PROVIDER_NOT_READY = 2;
+    private static final int WIDGET_FLAG_UI_NOT_READY = 4;
 
     private static final ScheduledExecutorService WORKER =
             Executors.newSingleThreadScheduledExecutor(r -> {
@@ -329,8 +339,8 @@ final class LayoutGuard {
         }
     }
 
-    private static int restoreMissingRows(SQLiteDatabase live, SQLiteDatabase backup,
-                                          int nativeColumns, int nativeRows, int nativeHotseat) {
+    static int restoreMissingRows(SQLiteDatabase live, SQLiteDatabase backup,
+                                  int nativeColumns, int nativeRows, int nativeHotseat) {
         final int targetColumns = ModuleMain.COLUMNS;
         final int targetRows = nativeRows;
         final int targetHotseat = ModuleMain.COLUMNS;
@@ -402,6 +412,9 @@ final class LayoutGuard {
                 }
 
                 ContentValues values = readRow(cursor, columns);
+                if (!repairRestoredWidget(values, id)) {
+                    continue;
+                }
                 if (container == CONTAINER_HOTSEAT) {
                     int slot = screen >= 0 && screen < targetHotseat && !hotseat[screen]
                             ? screen : firstFreeSlot(hotseat);
@@ -436,6 +449,35 @@ final class LayoutGuard {
             }
         }
         return restored;
+    }
+
+    /**
+     * Makes a restored widget row safe to insert. Returns false when the row has to be skipped.
+     */
+    static boolean repairRestoredWidget(ContentValues values, int id) {
+        Integer itemType = values.getAsInteger("itemType");
+        if (itemType == null || itemType != ITEM_TYPE_APPWIDGET) {
+            return true;
+        }
+        String provider = values.getAsString("appWidgetProvider");
+        if (provider == null || ComponentName.unflattenFromString(provider) == null) {
+            // WorkspaceItemProcessor unflattenFromString(...)!! on this column, so a widget row
+            // without a usable provider would take the loader down.
+            log(Log.WARN, "skipping widget row " + id + ": invalid appWidgetProvider=" + provider);
+            return false;
+        }
+        values.put("appWidgetId", -1);
+        values.put("restored", WIDGET_FLAG_ID_NOT_VALID | WIDGET_FLAG_PROVIDER_NOT_READY
+                | WIDGET_FLAG_UI_NOT_READY);
+        Integer spanX = values.getAsInteger("spanX");
+        Integer spanY = values.getAsInteger("spanY");
+        if (spanX == null || spanX <= 0) {
+            values.put("spanX", 1);
+        }
+        if (spanY == null || spanY <= 0) {
+            values.put("spanY", 1);
+        }
+        return true;
     }
 
     private static int placeOnWorkspace(ContentValues values, Map<Integer, boolean[][]> occupied,
